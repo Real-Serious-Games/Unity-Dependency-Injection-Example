@@ -15,9 +15,9 @@ public class DependencyResolver
     /// 
     /// WARNING: This function can be expensive. Call it only once and cache the result if you need it.
     /// </summary>
-    public void FindObjects(List<MonoBehaviour> injectables)
+    public void FindObjects(IEnumerable<GameObject> allGameObjects, List<MonoBehaviour> injectables)
     {
-        foreach (var gameObject in GameObject.FindObjectsOfType<GameObject>())
+        foreach (var gameObject in allGameObjects)
         {
             foreach (var component in gameObject.GetComponents<MonoBehaviour>())
             {
@@ -144,8 +144,26 @@ public class DependencyResolver
     /// </summary>
     public void ResolveScene()
     {
+        var allGameObjects = GameObject.FindObjectsOfType<GameObject>();
+        Resolve(allGameObjects);
+    }
+
+    /// <summary>
+    /// Resolve a subset of the hierarchy downwards from a particular object.
+    /// </summary>
+    public void Resolve(GameObject parent)
+    {
+        var gameObjects = new GameObject[] { parent };
+        Resolve(gameObjects);
+    }
+
+    /// <summary>
+    /// Resolve dependencies for the hierarchy downwards from a set of game objects.
+    /// </summary>
+    public void Resolve(IEnumerable<GameObject> gameObjects)
+    {
         var injectables = new List<MonoBehaviour>();
-        FindObjects(injectables);
+        FindObjects(gameObjects, injectables);
 
         foreach (var injectable in injectables)
         {
