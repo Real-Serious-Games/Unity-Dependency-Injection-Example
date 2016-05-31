@@ -11,46 +11,25 @@ using UnityEngine;
 public class DependencyResolver
 {
     /// <summary>
-    /// Enumerate root objects in the Unity scene.
+    /// Enumerate the scene and find objects of interest to the dependency resolver.
     /// 
     /// WARNING: This function can be expensive. Call it only once and cache the result if you need it.
     /// </summary>
-    /// <returns></returns>
-    public IEnumerable<GameObject> GetRootObjects()
+    public void FindObjects(List<MonoBehaviour> injectables)
     {
-        return GameObject.FindObjectsOfType<GameObject>()
-            .Cast<GameObject>()
-            .Where(go => go.transform.parent == null);
-
-        /* Todo: This code would do this except it causes the following error:
-         * 
-         * ArgumentException: The scene is not loaded.
-         * 
-         * http://forum.unity3d.com/threads/bug-getrootgameobjects-is-not-working-in-awake.379317/
-         * https://issuetracker.unity3d.com/issues/scene-is-not-considered-loaded-when-awake-is-called
-         * 
-
-        for (var sceneIndex = 0; sceneIndex < SceneManager.sceneCount; ++sceneIndex)
+        foreach (var gameObject in GameObject.FindObjectsOfType<GameObject>())
         {
-            var scene = SceneManager.GetSceneAt(sceneIndex);
-            foreach (var rootObject in scene.GetRootGameObjects())
+            foreach (var component in gameObject.GetComponents<MonoBehaviour>())
             {
-                yield return rootObject;
-            }
-        }
-        */
-    }
-
-    /// <summary>
-    /// Enumerate all Game Objects in the Unity hierarchy under 'parentObjects' that require dependency resolution.
-    /// </summary>
-    private IEnumerable<MonoBehaviour> FindInjectables(IEnumerable<GameObject> parentObjects)
-    {
-        foreach (var parentObject in parentObjects)
-        {
-            foreach (var injectable in parentObject.GetComponentsInChildren<IInjectable>())
-            {
-                yield return (MonoBehaviour)injectable;
+                var hasInjectableProperties = component
+                    .GetType()
+                    .GetProperties()
+                    .Where(IsPropertyInjectable)
+                    .Any();
+                if (hasInjectableProperties)
+                {
+                    injectables.Add(component);
+                }
             }
         }
     }
@@ -161,9 +140,10 @@ public class DependencyResolver
     /// </summary>
     public void ResolveScene()
     {
-        var rootObjects = GetRootObjects().ToArray(); // Bake the LINQ enumerable to an array.
+        var injectables = new List<MonoBehaviour>();
+        FindObjects(injectables);
 
-        foreach (var injectable in FindInjectables(rootObjects))
+        foreach (var injectable in injectables)
         {
             ResolveDependencies(injectable);
         }

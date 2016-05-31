@@ -4,7 +4,7 @@ using System.Collections;
 /// <summary>
 /// An example of a dependency.
 /// </summary>
-public class Dependency : MonoBehaviour
+public class ExampleDependency : MonoBehaviour
 {
 	// Use this for initialization
 	void Start () {
