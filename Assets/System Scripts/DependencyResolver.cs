@@ -119,7 +119,11 @@ public class DependencyResolver
     {
         if (!ResolvePropertyDependencyFromHierarchy(injectable, injectableProperty))
         {
-            Debug.LogError("Failed to find an injectable that matches " + injectableProperty.PropertyType.Name, injectable);
+            Debug.LogError(
+                "Failed to resolve dependency for property. Property: " + injectableProperty.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
+                "Failed to find a dependency that matches " + injectableProperty.PropertyType.Name + ".", 
+                injectable
+            );
         }
     }
 
