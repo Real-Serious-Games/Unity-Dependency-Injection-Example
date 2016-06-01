@@ -101,7 +101,7 @@ public class DependencyResolver
         {
             try
             {
-                Debug.Log("Injecting " + toInject.GetType().Name + " from hierarchy into " + injectable.GetType().Name + " at property " + injectableProperty.Name + " on GameObject '" + injectable.name + "'.", injectable);
+                Debug.Log("Injecting " + toInject.GetType().Name + " from hierarchy (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at property " + injectableProperty.Name + " on GameObject '" + injectable.name + "'.", injectable);
 
                 injectableProperty.SetValue(injectable, toInject, null);
             }
@@ -147,7 +147,7 @@ public class DependencyResolver
         {
             try
             {
-                Debug.Log("Injecting global service " + toInject.GetType().Name + " into " + injectable.GetType().Name + " at property " + injectableProperty.Name + " on GameObject '" + injectable.name + "'.", injectable);
+                Debug.Log("Injecting global service " + toInject.GetType().Name + " (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at property " + injectableProperty.Name + " on GameObject '" + injectable.name + "'.", injectable);
 
                 injectableProperty.SetValue(injectable, toInject, null);
             }
