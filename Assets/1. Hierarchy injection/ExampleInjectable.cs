@@ -7,7 +7,10 @@ using System.Collections;
 public class ExampleInjectable : MonoBehaviour
 {
     [Inject]
-    public ExampleDependency ExampleDependency { get; set; }
+    public ExampleDependency ExampleDependencyAsProperty { get; set; }
+
+    [Inject]
+    public ExampleDependency ExampleDependencyAsField;
 
     // Use this for initialization
     void Start () {
