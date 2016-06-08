@@ -154,17 +154,17 @@ public class DependencyResolver
     /// <summary>
     /// Attempt to resolve a propety dependency by scanning up the hiearchy for a MonoBehaviour that mathces the injection type.
     /// </summary>
-    private bool ResolvePropertyDependencyFromHierarchy(MonoBehaviour injectable, IInjectableMember injectableProperty)
+    private bool ResolvePropertyDependencyFromHierarchy(MonoBehaviour injectable, IInjectableMember injectableMember)
     {
         // Find a match in the hierarchy.
-        var toInject = FindDependencyInHierarchy(injectableProperty.MemberType, injectable.gameObject);
+        var toInject = FindDependencyInHierarchy(injectableMember.MemberType, injectable.gameObject);
         if (toInject != null)
         {
             try
             {
-                Debug.Log("Injecting " + toInject.GetType().Name + " from hierarchy (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at property " + injectableProperty.Name + " on GameObject '" + injectable.name + "'.", injectable);
+                Debug.Log("Injecting " + toInject.GetType().Name + " from hierarchy (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at property " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
 
-                injectableProperty.SetValue(injectable, toInject);
+                injectableMember.SetValue(injectable, toInject);
             }
             catch (Exception ex)
             {
@@ -200,17 +200,17 @@ public class DependencyResolver
     /// Attempt to resolve a property dependency from global services.
     /// Returns false is no such dependency was found.
     /// </summary>
-    private bool ResolvePropertyDependencyFromService(MonoBehaviour injectable, IInjectableMember injectableProperty, IEnumerable<MonoBehaviour> globalServices)
+    private bool ResolvePropertyDependencyFromService(MonoBehaviour injectable, IInjectableMember injectableMember, IEnumerable<MonoBehaviour> globalServices)
     {
         // Find a match in the list of global services.
-        var toInject = FindResolveableService(injectableProperty.MemberType, globalServices);
+        var toInject = FindResolveableService(injectableMember.MemberType, globalServices);
         if (toInject != null)
         {
             try
             {
-                Debug.Log("Injecting global service " + toInject.GetType().Name + " (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at property " + injectableProperty.Name + " on GameObject '" + injectable.name + "'.", injectable);
+                Debug.Log("Injecting global service " + toInject.GetType().Name + " (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at property " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
 
-                injectableProperty.SetValue(injectable, toInject);
+                injectableMember.SetValue(injectable, toInject);
             }
             catch (Exception ex)
             {
@@ -228,15 +228,15 @@ public class DependencyResolver
     /// <summary>
     /// Resolve a property dependency and inject the resolved valued.
     /// </summary>
-    private void ResolvePropertyDependency(MonoBehaviour injectable, IInjectableMember injectableProperty, IEnumerable<MonoBehaviour> globalServices)
+    private void ResolvePropertyDependency(MonoBehaviour injectable, IInjectableMember injectableMember, IEnumerable<MonoBehaviour> globalServices)
     {
-        if (!ResolvePropertyDependencyFromHierarchy(injectable, injectableProperty))
+        if (!ResolvePropertyDependencyFromHierarchy(injectable, injectableMember))
         {
-            if (!ResolvePropertyDependencyFromService(injectable, injectableProperty, globalServices))
+            if (!ResolvePropertyDependencyFromService(injectable, injectableMember, globalServices))
             {
                 Debug.LogError(
-                    "Failed to resolve dependency for property. Property: " + injectableProperty.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
-                    "Failed to find a dependency that matches " + injectableProperty.MemberType.Name + ".",
+                    "Failed to resolve dependency for property. Property: " + injectableMember.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
+                    "Failed to find a dependency that matches " + injectableMember.MemberType.Name + ".",
                     injectable
                 );
             }
@@ -249,9 +249,9 @@ public class DependencyResolver
     private void ResolveDependencies(MonoBehaviour injectable, IEnumerable<MonoBehaviour> globalServices)
     {
         var injectableProperties = FindInjectableProperties(injectable);
-        foreach (var injectableProperty in injectableProperties)
+        foreach (var injectableMember in injectableProperties)
         {
-            ResolvePropertyDependency(injectable, injectableProperty, globalServices);
+            ResolvePropertyDependency(injectable, injectableMember, globalServices);
         }
     }
 
