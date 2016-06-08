@@ -52,11 +52,11 @@ public class DependencyResolver
     }
 
     /// <summary>
-    /// Determine if a property requires dependency resolution, checks if the property has the 'Inject' attribute.
+    /// Determine if a member requires dependency resolution, checks if it has the 'Inject' attribute.
     /// </summary>
-    private bool IsMemberInjectable(MemberInfo property)
+    private bool IsMemberInjectable(MemberInfo member)
     {
-        return property.GetCustomAttributes(true)
+        return member.GetCustomAttributes(true)
             .Where(attribute => attribute is InjectAttribute)
             .Count() > 0;
     }
@@ -74,7 +74,7 @@ public class DependencyResolver
 
         var injectableFields = type.GetFields()
             .Where(IsMemberInjectable)
-            .Select(property => new InjectableField(property))
+            .Select(field => new InjectableField(field))
             .Cast<IInjectableMember>();
 
         return injectableProperties.Concat(injectableFields);
@@ -131,7 +131,7 @@ public class DependencyResolver
         Type MemberType { get; }
 
         /// <summary>
-        /// The category of the member (field of property).
+        /// The category of the member (field or property).
         /// </summary>
         string Category { get; }
     }
@@ -179,7 +179,7 @@ public class DependencyResolver
         }
 
         /// <summary>
-        /// The category of the member (field of property).
+        /// The category of the member (field or property).
         /// </summary>
         public string Category
         {
@@ -197,9 +197,9 @@ public class DependencyResolver
     {
         private FieldInfo fieldInfo;
 
-        public InjectableField(FieldInfo propertyInfo)
+        public InjectableField(FieldInfo fieldInfo)
         {
-            this.fieldInfo = propertyInfo;
+            this.fieldInfo = fieldInfo;
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ public class DependencyResolver
         }
 
         /// <summary>
-        /// The category of the member (field of property).
+        /// The category of the member (field or property).
         /// </summary>
         public string Category
         {
