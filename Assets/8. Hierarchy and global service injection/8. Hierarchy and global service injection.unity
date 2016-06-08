@@ -95,7 +95,7 @@ GameObject:
   - 4: {fileID: 102775826}
   - 114: {fileID: 102775827}
   m_Layer: 0
-  m_Name: Example with global service injected
+  m_Name: Combined example with both hierarchy and global service injection
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -121,7 +121,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 102775825}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 893fb0c478d0eec49a35e14defb25e89, type: 3}
+  m_Script: {fileID: 11500000, guid: 62c941006e103a84a848b6f40a7c78d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &262936750
@@ -257,6 +257,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 884632294}
+  - 114: {fileID: 884632293}
   m_Layer: 0
   m_Name: Parent
   m_TagString: Untagged
@@ -264,6 +265,17 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &884632293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 884632292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 203b47d632485dd4e96df3ae10c39777, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &884632294
 Transform:
   m_ObjectHideFlags: 0
