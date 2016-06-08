@@ -54,12 +54,13 @@ public class DependencyResolver
     /// <summary>
     /// Use C# reflection to find all properties of an object that require dependency resolution and injection.
     /// </summary>
-    private IEnumerable<InjectableProperty> FindInjectableProperties(object injectable)
+    private IEnumerable<IInjectableMember> FindInjectableProperties(object injectable)
     {
         var type = injectable.GetType();
         return type.GetProperties()
             .Where(IsPropertyInjectable)
-            .Select(property => new InjectableProperty(property));
+            .Select(property => new InjectableProperty(property))
+            .Cast<IInjectableMember>();
     }
 
     /// <summary>
@@ -92,7 +93,25 @@ public class DependencyResolver
         return null;
     }
 
-    public struct InjectableProperty
+    public interface IInjectableMember
+    {
+        /// <summary>
+        /// The one thing we want to do is set the value of the member.
+        /// </summary>
+        void SetValue(object propertyOwner, object value);
+
+        /// <summary>
+        /// Get the name  of the member.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// Get the type of the member.
+        /// </summary>
+        Type MemberType { get; }
+    }
+
+    public class InjectableProperty : IInjectableMember
     {
         private PropertyInfo propertyInfo;
 
@@ -135,7 +154,7 @@ public class DependencyResolver
     /// <summary>
     /// Attempt to resolve a propety dependency by scanning up the hiearchy for a MonoBehaviour that mathces the injection type.
     /// </summary>
-    private bool ResolvePropertyDependencyFromHierarchy(MonoBehaviour injectable, InjectableProperty injectableProperty)
+    private bool ResolvePropertyDependencyFromHierarchy(MonoBehaviour injectable, IInjectableMember injectableProperty)
     {
         // Find a match in the hierarchy.
         var toInject = FindDependencyInHierarchy(injectableProperty.MemberType, injectable.gameObject);
@@ -181,7 +200,7 @@ public class DependencyResolver
     /// Attempt to resolve a property dependency from global services.
     /// Returns false is no such dependency was found.
     /// </summary>
-    private bool ResolvePropertyDependencyFromService(MonoBehaviour injectable, InjectableProperty injectableProperty, IEnumerable<MonoBehaviour> globalServices)
+    private bool ResolvePropertyDependencyFromService(MonoBehaviour injectable, IInjectableMember injectableProperty, IEnumerable<MonoBehaviour> globalServices)
     {
         // Find a match in the list of global services.
         var toInject = FindResolveableService(injectableProperty.MemberType, globalServices);
@@ -209,7 +228,7 @@ public class DependencyResolver
     /// <summary>
     /// Resolve a property dependency and inject the resolved valued.
     /// </summary>
-    private void ResolvePropertyDependency(MonoBehaviour injectable, InjectableProperty injectableProperty, IEnumerable<MonoBehaviour> globalServices)
+    private void ResolvePropertyDependency(MonoBehaviour injectable, IInjectableMember injectableProperty, IEnumerable<MonoBehaviour> globalServices)
     {
         if (!ResolvePropertyDependencyFromHierarchy(injectable, injectableProperty))
         {
