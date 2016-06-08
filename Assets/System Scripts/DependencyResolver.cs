@@ -119,6 +119,11 @@ public class DependencyResolver
         /// Get the type of the member.
         /// </summary>
         Type MemberType { get; }
+
+        /// <summary>
+        /// The category of the member (field of property).
+        /// </summary>
+        string Category { get; }
     }
 
     /// <summary>
@@ -161,6 +166,17 @@ public class DependencyResolver
             {
                 return propertyInfo.PropertyType;
             }            
+        }
+
+        /// <summary>
+        /// The category of the member (field of property).
+        /// </summary>
+        public string Category
+        {
+            get
+            {
+                return "property";
+            }
         }
     }
 
@@ -205,7 +221,19 @@ public class DependencyResolver
                 return fieldInfo.FieldType;
             }
         }
+
+        /// <summary>
+        /// The category of the member (field of property).
+        /// </summary>
+        public string Category
+        {
+            get
+            {
+                return "field";
+            }
+        }
     }
+
     /// <summary>
     /// Attempt to resolve a member dependency by scanning up the hiearchy for a MonoBehaviour that mathces the injection type.
     /// </summary>
@@ -217,7 +245,7 @@ public class DependencyResolver
         {
             try
             {
-                Debug.Log("Injecting " + toInject.GetType().Name + " from hierarchy (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at member " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
+                Debug.Log("Injecting " + toInject.GetType().Name + " from hierarchy (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at " + injectableMember.Category + " " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
 
                 injectableMember.SetValue(injectable, toInject);
             }
@@ -263,7 +291,7 @@ public class DependencyResolver
         {
             try
             {
-                Debug.Log("Injecting global service " + toInject.GetType().Name + " (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at member " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
+                Debug.Log("Injecting global service " + toInject.GetType().Name + " (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at " + injectableMember.Category + " " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
 
                 injectableMember.SetValue(injectable, toInject);
             }
@@ -290,7 +318,7 @@ public class DependencyResolver
             if (!ResolveMemberDependencyFromService(injectable, injectableMember, globalServices))
             {
                 Debug.LogError(
-                    "Failed to resolve dependency for member. Member: " + injectableMember.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
+                    "Failed to resolve dependency for " + injectableMember.Category + ". Member: " + injectableMember.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
                     "Failed to find a dependency that matches " + injectableMember.MemberType.Name + ".",
                     injectable
                 );
