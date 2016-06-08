@@ -23,7 +23,7 @@ public class DependencyResolver
             {
                 var componentType = component.GetType();
                 var hasInjectableProperties = componentType.GetProperties()
-                    .Where(IsPropertyInjectable)
+                    .Where(IsMemberInjectable)
                     .Any();
                 if (hasInjectableProperties)
                 {
@@ -44,7 +44,7 @@ public class DependencyResolver
     /// <summary>
     /// Determine if a property requires dependency resolution, checks if the property has the 'Inject' attribute.
     /// </summary>
-    private bool IsPropertyInjectable(PropertyInfo property)
+    private bool IsMemberInjectable(MemberInfo property)
     {
         return property.GetCustomAttributes(true)
             .Where(attribute => attribute is InjectAttribute)
@@ -52,15 +52,22 @@ public class DependencyResolver
     }
 
     /// <summary>
-    /// Use C# reflection to find all properties of an object that require dependency resolution and injection.
+    /// Use C# reflection to find all members of an object that require dependency resolution and injection.
     /// </summary>
-    private IEnumerable<IInjectableMember> FindInjectableProperties(object injectable)
+    private IEnumerable<IInjectableMember> FindInjectableMembers(object injectable)
     {
         var type = injectable.GetType();
-        return type.GetProperties()
-            .Where(IsPropertyInjectable)
+        var injectableProperties = type.GetProperties()
+            .Where(IsMemberInjectable)
             .Select(property => new InjectableProperty(property))
             .Cast<IInjectableMember>();
+
+        var injectableFields = type.GetFields()
+            .Where(IsMemberInjectable)
+            .Select(property => new InjectableField(property))
+            .Cast<IInjectableMember>();
+
+        return injectableProperties.Concat(injectableFields);
     }
 
     /// <summary>
@@ -93,6 +100,9 @@ public class DependencyResolver
         return null;
     }
 
+    /// <summary>
+    /// Represents a member (property or field) of an object that have a dependency injected.
+    /// </summary>
     public interface IInjectableMember
     {
         /// <summary>
@@ -111,6 +121,9 @@ public class DependencyResolver
         Type MemberType { get; }
     }
 
+    /// <summary>
+    /// Represents a property of an object that have a dependency injected.
+    /// </summary>
     public class InjectableProperty : IInjectableMember
     {
         private PropertyInfo propertyInfo;
@@ -129,7 +142,7 @@ public class DependencyResolver
         }
 
         /// <summary>
-        /// Get the name  of the member.
+        /// Get the name of the member.
         /// </summary>
         public string Name
         {
@@ -151,6 +164,48 @@ public class DependencyResolver
         }
     }
 
+    /// <summary>
+    /// Represents a field of an object that have a dependency injected.
+    /// </summary>
+    public class InjectableField : IInjectableMember
+    {
+        private FieldInfo fieldInfo;
+
+        public InjectableField(FieldInfo propertyInfo)
+        {
+            this.fieldInfo = propertyInfo;
+        }
+
+        /// <summary>
+        /// The one thing we want to do is set the value of the member.
+        /// </summary>
+        public void SetValue(object owner, object value)
+        {
+            fieldInfo.SetValue(owner, value);
+        }
+
+        /// <summary>
+        /// Get the name of the member.
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                return fieldInfo.Name;
+            }
+        }
+
+        /// <summary>
+        /// Get the type of the member.
+        /// </summary>
+        public Type MemberType
+        {
+            get
+            {
+                return fieldInfo.FieldType;
+            }
+        }
+    }
     /// <summary>
     /// Attempt to resolve a member dependency by scanning up the hiearchy for a MonoBehaviour that mathces the injection type.
     /// </summary>
@@ -248,7 +303,7 @@ public class DependencyResolver
     /// </summary>
     private void ResolveDependencies(MonoBehaviour injectable, IEnumerable<MonoBehaviour> globalServices)
     {
-        var injectableProperties = FindInjectableProperties(injectable);
+        var injectableProperties = FindInjectableMembers(injectable);
         foreach (var injectableMember in injectableProperties)
         {
             ResolveMemberDependency(injectable, injectableMember, globalServices);
