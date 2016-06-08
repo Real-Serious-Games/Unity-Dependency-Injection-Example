@@ -29,6 +29,16 @@ public class DependencyResolver
                 {
                     injectables.Add(component);
                 }
+                else
+                {
+                    var hasInjectableFields = componentType.GetFields()
+                        .Where(IsMemberInjectable)
+                        .Any();
+                    if (hasInjectableFields)
+                    {
+                        injectables.Add(component);
+                    }
+                }
 
                 var hasServiceAttribute = componentType.GetCustomAttributes(true)
                     .Where(attribute => attribute is ServiceAttribute)
