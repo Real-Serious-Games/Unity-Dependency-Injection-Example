@@ -106,18 +106,62 @@ public class DependencyResolver
     }
 
     /// <summary>
+    /// Find matching dependencies at a particular level in the hiearchy.
+    /// </summary>
+    private IEnumerable<MonoBehaviour> FindMatchingDependendencies(Type injectionType, GameObject gameObject)
+    {
+        foreach (var component in gameObject.GetComponents<MonoBehaviour>())
+        {
+            if (injectionType.IsAssignableFrom(component.GetType()))
+            {
+                yield return component;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Find a single matching dependency at a particular level in the hierarchy.
+    /// Returns null if none or multiple were found.
+    /// </summary>
+    private MonoBehaviour FindMatchingDependency(Type injectionType, GameObject gameObject, MonoBehaviour injectable)
+    {
+        var matchingDependencies = FindMatchingDependendencies(injectionType, gameObject).ToArray();
+        if (matchingDependencies.Length == 1)
+        {
+            // A single matching dep was found.
+            return matchingDependencies[0];
+        }
+
+        if (matchingDependencies.Length == 0)
+        {
+            // No deps were found.
+            return null;
+        }
+
+        Debug.LogError(
+            "Found multiple hierarchy dependencies that match injection type " + injectionType.Name + " to be injected into '" + injectable.name + "'. See following warnings.",
+            injectable
+        );
+
+        foreach (var dependency in matchingDependencies)
+        {
+            Debug.LogWarning("  Duplicate dependencies: '" + dependency.name + "'.", dependency);
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Walk up the hierarchy (towards the root) and find an injectable dependency that matches the specified type.
     /// </summary>
-    private MonoBehaviour FindDependencyInHierarchy(Type injectionType, GameObject fromGameObject)
+    private MonoBehaviour FindDependencyInHierarchy(Type injectionType, MonoBehaviour injectable)
     {
-        foreach (var ancestor in GetAncestors(fromGameObject))
+        foreach (var ancestor in GetAncestors(injectable.gameObject))
         {
-            foreach (var component in ancestor.GetComponents<MonoBehaviour>())
+            var dependency = FindMatchingDependency(injectionType, ancestor, injectable);
+            if (dependency != null)
             {
-                if (injectionType.IsAssignableFrom(component.GetType()))
-                {
-                    return component;
-                }
+                return dependency;
             }
         }
 
@@ -264,7 +308,7 @@ public class DependencyResolver
     private bool ResolveMemberDependencyFromHierarchy(MonoBehaviour injectable, IInjectableMember injectableMember)
     {
         // Find a match in the hierarchy.
-        var toInject = FindDependencyInHierarchy(injectableMember.MemberType, injectable.gameObject);
+        var toInject = FindDependencyInHierarchy(injectableMember.MemberType, injectable);
         if (toInject != null)
         {
             try
@@ -320,7 +364,7 @@ public class DependencyResolver
         }
 
         Debug.LogError(
-            "Found multiple global services that match injection type " + injectionType.GetType().Name + " to be injected into '" + injectable.name + "'. See following warnings.", 
+            "Found multiple global services that match injection type " + injectionType.Name + " to be injected into '" + injectable.name + "'. See following warnings.", 
             injectable
         );
 
