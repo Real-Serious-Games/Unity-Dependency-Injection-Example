@@ -288,16 +288,45 @@ public class DependencyResolver
     }
 
     /// <summary>
-    /// Find a service that matches the specified type that is to be injected.
+    /// Find services that match the requested injection type.
     /// </summary>
-    private MonoBehaviour FindResolveableService(Type injectionType, IEnumerable<MonoBehaviour> globalServices)
+    private IEnumerable<MonoBehaviour> FindMatchingService(Type injectionType, IEnumerable<MonoBehaviour> globalServices)
     {
         foreach (var service in globalServices)
         {
             if (injectionType.IsAssignableFrom(service.GetType()))
             {
-                return service;
+                yield return service;
             }
+        }
+    }
+
+    /// <summary>
+    /// Find a service that matches the specified type that is to be injected.
+    /// </summary>
+    private MonoBehaviour FindResolveableService(Type injectionType, IEnumerable<MonoBehaviour> globalServices, MonoBehaviour injectable)
+    {
+        var matchingServices = FindMatchingService(injectionType, globalServices).ToArray();
+        if (matchingServices.Length == 1)
+        {
+            // A single matching service was found.
+            return matchingServices[0];
+        }
+
+        if (matchingServices.Length == 0)
+        {
+            // No services were found.
+            return null;
+        }
+
+        Debug.LogError(
+            "Found multiple global services that match injection type " + injectionType.GetType().Name + " to be injected into '" + injectable.name + "'. See following warnings.", 
+            injectable
+        );
+
+        foreach (var service in matchingServices)
+        {
+            Debug.LogWarning("  Duplicate service: '" + service.name + "'.", service);
         }
 
         return null;
@@ -310,7 +339,7 @@ public class DependencyResolver
     private bool ResolveMemberDependencyFromService(MonoBehaviour injectable, IInjectableMember injectableMember, IEnumerable<MonoBehaviour> globalServices)
     {
         // Find a match in the list of global services.
-        var toInject = FindResolveableService(injectableMember.MemberType, globalServices);
+        var toInject = FindResolveableService(injectableMember.MemberType, globalServices, injectable);
         if (toInject != null)
         {
             try
