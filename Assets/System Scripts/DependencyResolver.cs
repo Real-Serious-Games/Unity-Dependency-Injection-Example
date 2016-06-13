@@ -40,6 +40,20 @@ public class DependencyResolver
                     }
                 }
 
+                if (componentType.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(IsMemberInjectable)
+                    .Any())
+                {
+                    Debug.LogError("Private properties should not be marked with [Inject] atttribute!", component);
+                }
+
+                if (componentType.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(IsMemberInjectable)
+                    .Any())
+                {
+                    Debug.LogError("Private fields should not be marked with [Inject] atttribute!", component);
+                }
+
                 var hasServiceAttribute = componentType.GetCustomAttributes(true)
                     .Where(attribute => attribute is ServiceAttribute)
                     .Any();
@@ -64,7 +78,7 @@ public class DependencyResolver
     /// <summary>
     /// Use C# reflection to find all members of an object that require dependency resolution and injection.
     /// </summary>
-    private IEnumerable<IInjectableMember> FindInjectableMembers(object injectable)
+    private IEnumerable<IInjectableMember> FindInjectableMembers(MonoBehaviour injectable)
     {
         var type = injectable.GetType();
         var injectableProperties = type.GetProperties()
