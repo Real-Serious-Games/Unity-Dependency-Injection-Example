@@ -2,7 +2,7 @@
 using System.Collections;
 
 /// <summary>
-/// Example that has a dependency injected.
+/// Example that has dependencies injected.
 /// </summary>
 public class ExampleInjectable : MonoBehaviour
 {
