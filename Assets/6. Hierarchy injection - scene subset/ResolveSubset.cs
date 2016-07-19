@@ -6,15 +6,9 @@ using System.Collections;
 /// </summary>
 public class ResolveSubset : MonoBehaviour
 {
-    public GameObject ToResolve;
-
     void Awake()
     {
         var dependencyResolver = new DependencyResolver();
-
-        if (ToResolve != null)
-        {
-            dependencyResolver.Resolve(ToResolve);
-        }
+        dependencyResolver.Resolve(this.gameObject);
     }
 }
