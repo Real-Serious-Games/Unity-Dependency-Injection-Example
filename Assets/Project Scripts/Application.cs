@@ -7,7 +7,7 @@ using System.Reflection;
 using System;
 
 /// <summary>
-/// Simple Unity script to boostrap our 'application'.
+/// Simple Unity script to bootstrap our 'application'.
 /// </summary>
 public class Application : MonoBehaviour
 {
