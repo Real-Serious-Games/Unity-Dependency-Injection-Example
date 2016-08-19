@@ -6,7 +6,7 @@ using System.Collections;
 /// </summary>
 public class ExampleWithGlobalServiceInjected : MonoBehaviour
 {
-    [Inject]
+    [Inject(InjectFrom.Above)]
     public ExampleGlobalService ExampleGlobalService { get; set; }
 
     // Use this for initialization

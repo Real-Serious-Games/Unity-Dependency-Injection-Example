@@ -6,10 +6,10 @@ using System.Collections;
 /// </summary>
 public class ExampleWithHierarchyAndGlobalServiceInjected : MonoBehaviour
 {
-    [Inject]
+    [Inject(InjectFrom.Above)]
     public ExampleDependency ExampleDependency { get; set; }
 
-    [Inject]
+    [Inject(InjectFrom.Above)]
     public ExampleGlobalService ExampleGlobalService { get; set; }
 
     // Use this for initialization

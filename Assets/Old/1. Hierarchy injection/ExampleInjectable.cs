@@ -6,10 +6,10 @@ using System.Collections;
 /// </summary>
 public class ExampleInjectable : MonoBehaviour
 {
-    [Inject]
+    [Inject(InjectFrom.Above)]
     public ExampleDependency ExampleDependencyAsProperty { get; set; }
 
-    [Inject]
+    [Inject(InjectFrom.Above)]
     public ExampleDependency ExampleDependencyAsField;
 
     // Use this for initialization

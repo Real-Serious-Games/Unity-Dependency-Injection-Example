@@ -6,7 +6,7 @@ using System.Collections;
 /// </summary>
 public class AnotherExampleInjectable : MonoBehaviour
 {
-    [Inject]
+    [Inject(InjectFrom.Above)]
     public IExampleDependencyInterface ExampleDependency { get; set; }
 
     // Use this for initialization
