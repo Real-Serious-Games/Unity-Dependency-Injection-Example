@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Player : MonoBehaviour
-{
+public class Pedestrian : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {

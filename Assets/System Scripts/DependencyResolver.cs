@@ -442,6 +442,60 @@ public class DependencyResolver
     /// </summary>
     private bool ResolveMemberDependencyFromAnywhere(MonoBehaviour injectable, IInjectableMember injectableMember)
     {
+        if (injectableMember.MemberType.IsArray)
+        {
+            return ResolveArrayDependencyFromAnywhere(injectable, injectableMember);
+        }
+        else
+        {
+            return ResolveObjectDependencyFromAnywhere(injectable, injectableMember);
+        }
+    }
+
+    /// <summary>
+    /// Resolve an array dependency from objects anywhere in the scene.
+    /// </summary>
+    private static bool ResolveArrayDependencyFromAnywhere(MonoBehaviour injectable, IInjectableMember injectableMember)
+    {
+        var elementType = injectableMember.MemberType.GetElementType();
+        var toInject = GameObject.FindObjectsOfType(elementType);
+        if (toInject != null)
+        {
+            try
+            {
+                Debug.Log("Injecting array of " + toInject.Length + " elements into " + injectable.GetType().Name + " at " + injectableMember.Category + " " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
+
+                foreach (var component in toInject.Cast<MonoBehaviour>())
+                {
+                    Debug.Log("> Injecting object " + component.GetType().Name + " (GameObject: '" + component.gameObject.name + "').", injectable);
+                }
+
+                // 
+                // Create an appropriately typed array so that we don't get a type error when setting the value.
+                //
+                var typedArray = Array.CreateInstance(elementType, toInject.Length);
+                Array.Copy(toInject, typedArray, toInject.Length);
+
+                injectableMember.SetValue(injectable, typedArray);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex, injectable);
+            }
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Resolve an object dependency from objects anywhere in the scene.
+    /// </summary>
+    private static bool ResolveObjectDependencyFromAnywhere(MonoBehaviour injectable, IInjectableMember injectableMember)
+    {
         var toInject = (MonoBehaviour)GameObject.FindObjectOfType(injectableMember.MemberType);
         if (toInject != null)
         {
