@@ -2,7 +2,15 @@
 
 public enum InjectFrom
 {
-    Above
+    /// <summary>
+    /// Inject from the hierarchy above the current game object.
+    /// </summary>
+    Above,
+
+    /// <summary>
+    /// Inject from anywhere in the scene.
+    /// </summary>
+    Anywhere
 }
 
 /// <summary>
@@ -13,11 +21,11 @@ public class InjectAttribute : Attribute
     /// <summary>
     /// Indentifies where the dependency can be injected from.
     /// </summary>
-    private InjectFrom injectFrom;
+    public InjectFrom InjectFrom { get; private set; }
 
     public InjectAttribute(InjectFrom injectFrom)
     {
-        this.injectFrom = injectFrom;
+        this.InjectFrom = injectFrom;
     }
 }
 

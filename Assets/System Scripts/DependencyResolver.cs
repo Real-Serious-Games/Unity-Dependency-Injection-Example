@@ -192,6 +192,11 @@ public class DependencyResolver
         /// The category of the member (field or property).
         /// </summary>
         string Category { get; }
+
+        /// <summary>
+        /// Specifies where the dependency is allowed to be injected from.
+        /// </summary>
+        InjectFrom InjectFrom { get; }
     }
 
     /// <summary>
@@ -204,6 +209,10 @@ public class DependencyResolver
         public InjectableProperty(PropertyInfo propertyInfo)
         {
             this.propertyInfo = propertyInfo;
+            var injectAttribute = propertyInfo.GetCustomAttributes(typeof(InjectAttribute), false)
+                .Cast<InjectAttribute>()
+                .Single();
+            this.InjectFrom = injectAttribute.InjectFrom;
         }
 
         /// <summary>
@@ -246,6 +255,15 @@ public class DependencyResolver
                 return "property";
             }
         }
+
+        /// <summary>
+        /// Specifies where the dependency is allowed to be injected from.
+        /// </summary>
+        public InjectFrom InjectFrom
+        {
+            get;
+            private set;
+        }
     }
 
     /// <summary>
@@ -258,6 +276,10 @@ public class DependencyResolver
         public InjectableField(FieldInfo fieldInfo)
         {
             this.fieldInfo = fieldInfo;
+            var injectAttribute = fieldInfo.GetCustomAttributes(typeof(InjectAttribute), false)
+                .Cast<InjectAttribute>()
+                .Single();
+            this.InjectFrom = injectAttribute.InjectFrom;
         }
 
         /// <summary>
@@ -299,6 +321,15 @@ public class DependencyResolver
             {
                 return "field";
             }
+        }
+
+        /// <summary>
+        /// Specifies where the dependency is allowed to be injected from.
+        /// </summary>
+        public InjectFrom InjectFrom
+        {
+            get;
+            private set;
         }
     }
 
@@ -406,13 +437,55 @@ public class DependencyResolver
     }
 
     /// <summary>
+    /// Attempt to resolve a member dependency from anywhere in the scene.
+    /// Returns false is no such dependency was found.
+    /// </summary>
+    private bool ResolveMemberDependencyFromAnywhere(MonoBehaviour injectable, IInjectableMember injectableMember)
+    {
+        var toInject = (MonoBehaviour)GameObject.FindObjectOfType(injectableMember.MemberType);
+        if (toInject != null)
+        {
+            try
+            {
+                Debug.Log("Injecting object " + toInject.GetType().Name + " (GameObject: '" + toInject.gameObject.name + "') into " + injectable.GetType().Name + " at " + injectableMember.Category + " " + injectableMember.Name + " on GameObject '" + injectable.name + "'.", injectable);
+
+                injectableMember.SetValue(injectable, toInject);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex, injectable);
+            }
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Resolve a member dependency and inject the resolved valued.
     /// </summary>
     private void ResolveMemberDependency(MonoBehaviour injectable, IInjectableMember injectableMember, IEnumerable<MonoBehaviour> globalServices)
     {
-        if (!ResolveMemberDependencyFromHierarchy(injectable, injectableMember))
+        if (injectableMember.InjectFrom == InjectFrom.Above)
         {
-            if (!ResolveMemberDependencyFromService(injectable, injectableMember, globalServices))
+            if (!ResolveMemberDependencyFromHierarchy(injectable, injectableMember))
+            {
+                if (!ResolveMemberDependencyFromService(injectable, injectableMember, globalServices))
+                {
+                    Debug.LogError(
+                        "Failed to resolve dependency for " + injectableMember.Category + ". Member: " + injectableMember.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
+                        "Failed to find a dependency that matches " + injectableMember.MemberType.Name + ".",
+                        injectable
+                    );
+                }
+            }
+        }
+        else if (injectableMember.InjectFrom == InjectFrom.Anywhere)
+        {
+            if (!ResolveMemberDependencyFromAnywhere(injectable, injectableMember))
             {
                 Debug.LogError(
                     "Failed to resolve dependency for " + injectableMember.Category + ". Member: " + injectableMember.Name + ", MonoBehaviour: " + injectable.GetType().Name + ", GameObject: " + injectable.gameObject.name + "\r\n" +
@@ -420,6 +493,10 @@ public class DependencyResolver
                     injectable
                 );
             }
+        }
+        else
+        {
+            throw new ApplicationException("Unexpected use of InjectFrom enum: " + injectableMember.InjectFrom);
         }
     }
 
