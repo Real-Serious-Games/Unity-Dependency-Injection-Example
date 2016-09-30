@@ -7,9 +7,9 @@ using System.Reflection;
 using System;
 
 /// <summary>
-/// Simple Unity script to bootstrap our 'application'.
+/// Resolves dependencies for the entire scene.
 /// </summary>
-public class Application : MonoBehaviour
+public class ResolveScene : MonoBehaviour
 {
     /// <summary>
     /// Resolve scene dependencies on awake.
